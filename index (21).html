@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kiểm tra lấy vé Candy – Unit 6-7-8</title>
+<style>
+:root{color-scheme:dark;--u:10px;--ink:#2b1a4d;--pink:#e0287a;--gold:#ffc233;--vio:#7a3fb0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0}
+body{background:#2a1b4a;color:#fff8ee;font-family:"Baloo 2","Nunito","Segoe UI",system-ui,sans-serif;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#wrap{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;overflow:hidden;border-radius:14px}
+canvas#c{width:100%;height:100%;display:block;touch-action:none}
+#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(30,15,60,.55)}
+#ov.off{display:none}
+.card{background:#fff8ee;color:var(--ink);border-radius:calc(var(--u)*2);padding:calc(var(--u)*1.2) calc(var(--u)*3);width:94%;max-height:95%;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*.8);text-align:center}
+.sec{align-self:stretch;display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:calc(var(--u)*2);color:var(--vio)}
+.dots{display:flex;gap:calc(var(--u)*.6)}
+.dot{width:calc(var(--u)*1.5);height:calc(var(--u)*1.5);border-radius:50%;background:#e0d4f2}
+.dot.ok{background:#2a9d4a}.dot.no{background:#d62839}.dot.cur{background:var(--gold);box-shadow:0 0 0 3px #ffe9a8}
+h1{margin:0;font-size:calc(var(--u)*5);color:var(--pink);line-height:1.1}
+.ttl{font-size:calc(var(--u)*4.4);font-weight:800;line-height:1.15}
+.sub{font-size:calc(var(--u)*2.3);font-weight:700;color:#5b4a7a}
+.tk{font-size:calc(var(--u)*7);font-weight:800;line-height:1.1}
+.pic{width:calc(var(--u)*13);height:calc(var(--u)*13);border-radius:50%;background:#fff;box-shadow:0 0 0 calc(var(--u)*.6) #e8dcf7;display:flex;align-items:center;justify-content:center;font-size:calc(var(--u)*8);line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;flex:none}
+.pic.s{width:calc(var(--u)*7);height:calc(var(--u)*7);font-size:calc(var(--u)*4.4)}
+.opts{display:flex;gap:calc(var(--u)*1.6);justify-content:center;flex-wrap:wrap}
+.opt,.go{font:inherit;cursor:pointer;border:4px solid #d9cdee;background:#fff;border-radius:calc(var(--u)*1.8);color:var(--ink)}
+.opt{font-size:calc(var(--u)*3.4);font-weight:800;padding:calc(var(--u)*1) calc(var(--u)*2.4);min-width:calc(var(--u)*16)}
+.opt:hover{background:#fff1f7}.opt.ok{border-color:#2a9d4a;background:#d9f5e1}.opt.no{border-color:#d62839;background:#fde0e3}.opt:disabled{cursor:default}
+.opt.wide{min-width:60%}
+.go{background:var(--gold);border-color:var(--gold);font-size:calc(var(--u)*3.2);font-weight:800;padding:calc(var(--u)*1.1) calc(var(--u)*3.2)}
+.go.alt{background:#fff;border-color:#d9cdee}
+.go:disabled{background:#cfc6dd;border-color:#cfc6dd;color:#6d5f8a;cursor:default}
+input.tx{font:inherit;font-size:calc(var(--u)*4);font-weight:800;text-align:center;border:4px solid #d9cdee;border-radius:calc(var(--u)*1.8);padding:calc(var(--u)*.8) calc(var(--u)*2);width:40%;color:var(--ink);background:#fff}
+.hint{font-size:calc(var(--u)*3.2);font-weight:800;color:var(--vio);letter-spacing:.1em}
+.bot{display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*3);min-height:calc(var(--u)*6)}
+.fb{font-size:calc(var(--u)*3);font-weight:800}.fb.ok{color:#1e8e3e}.fb.no{color:#d62839}
+.wl{align-self:stretch;text-align:left;font-size:calc(var(--u)*1.8);color:#444;max-height:22%;overflow:auto}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c"></canvas><div id="ov"></div></div>
+<script>
+const W=960,H=540,C=7,R=7,T=72,BX=228,BY=18,cv=document.getElementById('c'),g=cv.getContext('2d'),ov=document.getElementById('ov'),wrap=document.getElementById('wrap');
+cv.width=W;cv.height=H;
+const fit=()=>document.documentElement.style.setProperty('--u',(wrap.clientWidth/100)+'px');fit();addEventListener('resize',fit);
+const FONT="'Baloo 2','Nunito','Segoe UI',system-ui,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+const rnd=n=>Math.floor(Math.random()*n),shuf=a=>a.slice().sort(()=>Math.random()-.5);
+let S={tickets:0,best:0,stars:0,tests:0,bestTest:0};
+try{Object.assign(S,JSON.parse(localStorage.getItem('cs_b12')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('cs_b12',JSON.stringify(S))}catch(e){}};
+
+/* ============ KIẾN THỨC (theo ảnh Unit 6 – 7 – 8) ============ */
+/* w = từ, e = hình, u = unit, t = cụm dùng trong câu "My school is in ..." (Unit 6) */
+const items=[
+ {w:'town',e:'🏘️',u:6,t:'the town'},{w:'village',e:'🐄',u:6,t:'the village'},{w:'city',e:'🏙️',u:6,t:'the city'},
+ {w:'mountains',e:'⛰️',u:6,t:'the mountains'},{w:'capital',e:'🏛️',u:6,t:'the capital'},{w:'in the suburb',e:'🏡',u:6,t:'the suburb'},
+ {w:'history and geography',e:'🌍',u:7},{w:'maths',e:'🧮',u:7},{w:'science',e:'🔬',u:7},{w:'English',e:'🔤',u:7},
+ {w:'Vietnamese',e:'🏮',u:7},{w:'PE',e:'⚽',u:7},{w:'IT',e:'💻',u:7},{w:'art',e:'🎨',u:7},{w:'music',e:'🎵',u:7},
+ {w:'fun',e:'🎉',u:8},{w:'interesting',e:'🤩',u:8},{w:'useful',e:'🛠️',u:8},{w:'easy',e:'😊',u:8},{w:'difficult',e:'🤯',u:8}];
+const writeItems=items.filter(x=>x.w.indexOf(' ')<0&&x.w.length>2);
+
+const fills=[
+ {s:'Where ___ your school?',e:'🏫',a:'is',o:['is','are','do']},
+ {s:'It’s ___ the city.',e:'🏙️',a:'in',o:['in','on','at']},
+ {s:'My school is in the ___ of the city.',e:'🎯',a:'centre',o:['centre','art','easy']},
+ {s:'My school is in the ___.',e:'🏡',a:'suburb',o:['suburb','music','easy']},
+ {s:'My school is in the ___.',e:'⛰️',a:'mountains',o:['mountains','science','useful']},
+ {s:'What subjects do you ___ today?',e:'📅',a:'have',o:['have','is','am']},
+ {s:'My favourite ___ is science.',e:'🔬',a:'subject',o:['subject','village','capital']},
+ {s:'I have maths and science ___.',e:'📅',a:'today',o:['today','because','subject']},
+ {s:'Why ___ you like music?',e:'🎵',a:'do',o:['do','is','are']},
+ {s:'I like English ___ it’s fun.',e:'🎉',a:'because',o:['because','but','or']}];
+
+const sentQ=[
+ ['Where is your school?','Where your school is?','Where is school your?'],
+ ['It’s in the city.','It’s on the city.','It’s at the city.'],
+ ['What subjects do you have today?','What subjects you have today?','What subjects do have you today?'],
+ ['What’s your favourite subject?','What’s you favourite subject?','What your favourite subject?'],
+ ['My favourite subject is science.','My favourite subject are science.','My subject favourite is science.'],
+ ['Why do you like maths?','Why you like maths?','Why do you likes maths?'],
+ ['I like it because it’s fun.','I like it because is fun.','I like it because it fun.'],
+ ['I have English today.','I has English today.','I having English today.']];
+
+const oneQ=[
+ {s:'Where is your ___?',a:'school',e:'🏫'},
+ {s:'It’s ___ the village.',a:'in',e:'🐄'},
+ {s:'My school is in the ___ of the city.',a:'centre',acc:['centre','center'],e:'🎯'},
+ {s:'What subjects do you ___ today?',a:'have',e:'📅'},
+ {s:'My favourite ___ is science.',a:'subject',e:'🔬'},
+ {s:'I like it ___ it’s fun.',a:'because',e:'🎉'},
+ {s:'Why do you ___ music?',a:'like',e:'🎵'},
+ {s:'I like PE because it’s ___.',a:'fun',e:'⚽'}];
+
+const sortQ=['Where is your school?','It’s in the city.','What subjects do you have today?','I have maths today.',
+ 'What’s your favourite subject?','My favourite subject is science.','Why do you like English?','I like it because it’s fun.'];
+
+const say={6:i=>`My school is in ${i.t}.`,7:i=>`I have ${i.w} today.`,8:i=>`I like it because it’s ${i.w}.`};
+
+function buildTest(){const Q=[];
+ const pickN=(a,n)=>shuf(a).slice(0,n),opt3=it=>shuf([it,...shuf(items.filter(x=>x!==it)).slice(0,2)]);
+ pickN(items,2).forEach(it=>Q.push({sec:'Look and choose the correct option',kind:'choice',big:it.e,sub:'Chọn từ đúng',o:opt3(it).map(x=>({h:x.w,ok:x===it})),ans:it.w}));
+ pickN(fills,2).forEach(f=>Q.push({sec:'Choose the correct word',kind:'choice',big:f.e,title:f.s,o:shuf(f.o).map(x=>({h:x,ok:x==f.a})),ans:f.a}));
+ const sq=sentQ[rnd(sentQ.length)];Q.push({sec:'Choose the correct sentence',kind:'choice',big:'📝',small:1,sub:'Chọn câu đúng',o:shuf(sq).map(x=>({h:x,ok:x==sq[0]})),ans:sq[0],long:1});
+ pickN(writeItems,2).forEach(it=>Q.push({sec:'Look and write the word',kind:'type',big:it.e,sub:'Viết từ tiếng Anh cho hình này',hint:it.w.split(' ').map(x=>x[0]+' '+'_ '.repeat(x.length-1).trim()).join('   '),ans:it.w}));
+ const on=oneQ[rnd(oneQ.length)];Q.push({sec:'Write ONE word to complete the sentence',kind:'type',big:on.e,title:on.s,sub:'Viết MỘT từ',hint:on.a[0]+' '+'_ '.repeat(on.a.length-1).trim(),ans:on.a,acc:on.acc});
+ const so=sortQ[rnd(sortQ.length)];Q.push({sec:'Reorder the words',kind:'sort',big:'🔤',small:1,sub:'Chạm vào các từ theo đúng thứ tự',ans:so});
+ const it=items[rnd(items.length)],same=Math.random()<.5,sh=same?it:shuf(items.filter(x=>x.u==it.u&&x!==it))[0];
+ Q.push({sec:'Read and choose True or False',kind:'tf',big:it.e,title:say[it.u](sh),sub:'Câu này đúng hay sai với hình?',ok:same,ans:same?'True':'False'});
+ return Q}
+const norm=s=>s.toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+
+/* ============ GIAO DIỆN BÀI KIỂM TRA ============ */
+let Q=[],qi=0,res=[],mode='menu';
+function show(h){ov.innerHTML=h;ov.className=''}function hide(){ov.className='off'}
+function menu(){mode='menu';
+ show(`<div class="card"><h1>🎟️ Kiểm tra lấy vé Candy</h1><div class="sub">Làm bài 10 câu để giành vé, rồi dùng vé để chơi Candy 🍬</div><div class="tk">🎟️ × ${S.tickets}</div>
+ <div class="opts"><button class="go" id="t">📝 Làm bài kiểm tra</button><button class="go" id="p" ${S.tickets>0?'':'disabled'}>🍬 Chơi Candy</button></div>
+ <div class="sub">4–5 câu đúng = 1 vé · 6–7 câu = 2 vé · 8–10 câu = 3 vé</div><div class="sub">⭐ đã sưu tầm: ${S.stars} · Điểm cao nhất: ${S.best}</div></div>`);
+ document.getElementById('t').onclick=startTest;document.getElementById('p').onclick=startCandy}
+function startTest(){Q=buildTest();qi=0;res=[];mode='test';renderQ()}
+function dots(){return`<div class="dots">${Q.map((_,i)=>`<div class="dot ${res[i]===true?'ok':res[i]===false?'no':i==qi?'cur':''}"></div>`).join('')}</div>`}
+function renderQ(){const q=Q[qi];let done=0;
+ show(`<div class="card"><div class="sec"><span>Câu ${qi+1}/${Q.length} · ${q.sec}</span>${dots()}</div><div class="pic${q.small?' s':''}">${q.big}</div>${q.title?`<div class="ttl">${q.title}</div>`:''}<div class="sub">${q.sub||''}</div><div id="body" class="opts"></div><div class="bot"><div class="fb" id="fb"></div><div id="nx"></div></div></div>`);
+ const body=document.getElementById('body'),fb=document.getElementById('fb'),nx=document.getElementById('nx');
+ const mk=(t,c,f)=>{const b=document.createElement('button');b.className=c;b.textContent=t;b.onclick=f;return b};
+ const end=(ok,correct)=>{done=1;res[qi]=ok;fb.className='fb '+(ok?'ok':'no');fb.textContent=ok?'✅ Đúng rồi!':'❌ Đáp án đúng: '+correct;
+  document.querySelector('.dots').outerHTML=dots();nx.innerHTML='';nx.append(mk(qi==Q.length-1?'Xem kết quả ▶':'Câu tiếp ▶','go',()=>{qi++;qi<Q.length?renderQ():finishTest()}))};
+ if(q.kind=='choice'){q.o.forEach(o=>{const b=mk(o.h,'opt'+(q.long?' wide':''),()=>{if(done)return;[...body.children].forEach((x,i)=>{x.disabled=true;if(q.o[i].ok)x.classList.add('ok')});if(!o.ok)b.classList.add('no');end(o.ok,q.ans)});body.append(b)})}
+ else if(q.kind=='tf'){[['✔ True',true],['✘ False',false]].forEach(([t,v])=>{const b=mk(t,'opt',()=>{if(done)return;[...body.children].forEach(x=>x.disabled=true);const ok=v===q.ok;b.classList.add(ok?'ok':'no');end(ok,q.ans)});body.append(b)})}
+ else if(q.kind=='type'){body.style.flexDirection='column';body.style.alignItems='center';const h=document.createElement('div');h.className='hint';h.textContent='Gợi ý: '+q.hint;
+  const inp=document.createElement('input');inp.className='tx';inp.autocomplete='off';inp.spellcheck=false;inp.placeholder='Gõ đáp án...';
+  const chk=()=>{if(done)return;const ok=(q.acc||[q.ans]).some(a=>norm(inp.value)==norm(a));inp.disabled=true;go.disabled=true;end(ok,q.ans)};
+  const go=mk('Kiểm tra ✔','go',chk);inp.onkeydown=e=>{if(e.key=='Enter')chk()};const row=document.createElement('div');row.className='opts';row.style.alignItems='center';row.append(inp,go);body.append(h,row);setTimeout(()=>inp.focus(),50)}
+ else{const ws=q.ans.split(' '),pool=shuf(ws.map((w,i)=>({w,i})));let pk=[];const line=document.createElement('div'),chips=document.createElement('div');line.className=chips.className='opts';line.style.minHeight='calc(var(--u)*7)';body.style.flexDirection='column';body.append(line,chips);
+  const rs=()=>{line.innerHTML='';chips.innerHTML='';pk.forEach(x=>{const b=mk(x.w,'opt ok',()=>{if(!done){pk=pk.filter(y=>y!==x);rs()}});b.style.minWidth='0';line.append(b)});
+   pool.filter(x=>!pk.includes(x)).forEach(x=>{const b=mk(x.w,'opt',()=>{if(done)return;pk.push(x);rs();if(pk.length==ws.length)end(pk.map(y=>y.w).join(' ')==q.ans,q.ans)});b.style.minWidth='0';chips.append(b)})};rs()}}
+function finishTest(){const sc=res.filter(x=>x).length,tk=sc>=8?3:sc>=6?2:sc>=4?1:0;S.tickets+=tk;S.tests++;S.bestTest=Math.max(S.bestTest,sc);save();mode='result';
+ const wrong=Q.map((q,i)=>res[i]?'':`<div>• ${q.title||q.sub||q.sec}: <b>${q.ans}</b></div>`).join('');
+ show(`<div class="card"><h1>${sc>=8?'🏆 Tuyệt vời!':sc>=6?'👏 Giỏi lắm!':sc>=4?'👍 Khá tốt!':'💪 Cố gắng nhé!'}</h1><div class="ttl">Con đúng ${sc}/${Q.length} câu</div><div class="tk">${tk?'🎟️ × '+tk:'Chưa được vé'}</div><div class="sub">${tk?'Vé đang có: '+S.tickets:'Cần ít nhất 4 câu đúng để được vé. Làm bài mới nhé!'}</div>${wrong?`<div class="wl"><b>Các câu cần xem lại:</b>${wrong}</div>`:''}
+ <div class="opts"><button class="go" id="p" ${S.tickets>0?'':'disabled'}>🍬 Chơi Candy (${S.tickets} vé)</button><button class="go alt" id="t">📝 Bài mới</button><button class="go alt" id="m">Menu</button></div></div>`);
+ document.getElementById('p').onclick=startCandy;document.getElementById('t').onclick=startTest;document.getElementById('m').onclick=menu}
+
+/* ============ CANDY CRUSH (bàn 7×7, kẹo to, dễ nhìn) ============ */
+const CC=[{c:'#ff3b5c',s:'circle'},{c:'#ff9500',s:'hex'},{c:'#ffd60a',s:'star'},{c:'#27c46b',s:'tri'},{c:'#2f7dff',s:'sq'},{c:'#b14bff',s:'dia'}];
+const GOALS=[1000,1700,2400];
+let grid=[],moves=20,score=0,phase='idle',chain=0,clearT=0,spawnList=[],swapPair=null,sel=null,drag=null,idleT=0,tt=0,last=0;
+const mkT=(k,c,r,y)=>({k,x:BX+c*T,y:y==null?BY+r*T:y,tx:BX+c*T,ty:BY+r*T,s:1,dead:false});
+function startCandy(){if(S.tickets<=0)return;S.tickets--;save();moves=20;score=0;chain=0;sel=null;drag=null;idleT=0;initGrid();mode='candy';phase='idle';hide()}
+function initGrid(){do{grid=[];for(let r=0;r<R;r++){grid[r]=[];for(let c=0;c<C;c++){let k;do{k=rnd(6)}while((c>=2&&grid[r][c-1].k==k&&grid[r][c-2].k==k)||(r>=2&&grid[r-1][c].k==k&&grid[r-2][c].k==k));grid[r][c]=mkT(k,c,r)}}}while(!findMove())}
+function place(){for(let r=0;r<R;r++)for(let c=0;c<C;c++){const t=grid[r][c];if(t){t.tx=BX+c*T;t.ty=BY+r*T}}}
+function findRuns(){const runs=[];
+ for(let r=0;r<R;r++){let c=0;while(c<C){const t=grid[r][c];if(!t||t.k>=50){c++;continue}let e=c+1;while(e<C&&grid[r][e]&&grid[r][e].k==t.k)e++;if(e-c>=3){const cells=[];for(let x=c;x<e;x++)cells.push([r,x]);runs.push({cells,k:t.k})}c=e}}
+ for(let c=0;c<C;c++){let r=0;while(r<R){const t=grid[r][c];if(!t||t.k>=50){r++;continue}let e=r+1;while(e<R&&grid[e][c]&&grid[e][c].k==t.k)e++;if(e-r>=3){const cells=[];for(let x=r;x<e;x++)cells.push([x,c]);runs.push({cells,k:t.k})}r=e}}
+ return runs}
+function findMove(list){const out=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++)for(const[dr,dc]of[[0,1],[1,0]]){const r2=r+dr,c2=c+dc;if(r2>=R||c2>=C)continue;const a=grid[r][c],b=grid[r2][c2];if(!a||!b||a.k>=50||b.k>=50||a.k==b.k)continue;[a.k,b.k]=[b.k,a.k];const ok=findRuns().length>0;[a.k,b.k]=[b.k,a.k];if(ok){if(!list)return[[r,c],[r2,c2]];out.push([[r,c],[r2,c2]])}}return list?out:null}
+function swapTiles(a,b){const t=grid[a[0]][a[1]];grid[a[0]][a[1]]=grid[b[0]][b[1]];grid[b[0]][b[1]]=t;place()}
+function attemptSwap(a,b){const ta=grid[a[0]][a[1]],tb=grid[b[0]][b[1]];if(!ta||!tb||ta.k>=50||tb.k>=50||phase!='idle')return;swapTiles(a,b);swapPair=[a,b];phase='swap';sel=null;idleT=0}
+const bombs=()=>grid.flat().filter(t=>t&&t.k==99).length;
+function doClear(runs){const cells=[],spawn=[];for(const rn of runs){cells.push(...rn.cells);if(rn.cells.length>=4&&bombs()+spawn.length<3)spawn.push(rn.cells[Math.floor(rn.cells.length/2)])}startClear(cells,spawn)}
+function startClear(cells,spawn){const seen=new Set();let n=0;for(const[r,c]of cells){const key=r*C+c;if(seen.has(key))continue;seen.add(key);const t=grid[r][c];if(!t)continue;t.dead=true;n++}score+=Math.round(n*10*(1+chain*.5));spawnList=spawn||[];phase='clear';clearT=.25}
+function endClear(){for(let r=0;r<R;r++)for(let c=0;c<C;c++)if(grid[r][c]&&grid[r][c].dead)grid[r][c]=null;
+ for(const[r,c]of spawnList){const t=mkT(99,c,r);t.s=.2;grid[r][c]=t}spawnList=[];
+ for(let c=0;c<C;c++){let w=R-1;for(let r=R-1;r>=0;r--){if(grid[r][c]){const t=grid[r][c];grid[r][c]=null;grid[w][c]=t;w--}}for(let r=w;r>=0;r--)grid[r][c]=mkT(rnd(6),c,r,BY+(r-(w+1))*T)}
+ place();phase='fall'}
+function moveTiles(dt){let mv=false;const stp=760*dt;for(let r=0;r<R;r++)for(let c=0;c<C;c++){const t=grid[r][c];if(!t)continue;const dx=t.tx-t.x,dy=t.ty-t.y,d=Math.hypot(dx,dy);if(d>.5){mv=true;if(d<=stp){t.x=t.tx;t.y=t.ty}else{t.x+=dx/d*stp;t.y+=dy/d*stp}}else{t.x=t.tx;t.y=t.ty}}return mv}
+function shuffleBoard(){const ts=grid.flat().filter(t=>t&&t.k<50);let n=0;do{ts.forEach(t=>{t.k=rnd(6);t.s=.6});n++}while((findRuns().length||!findMove())&&n<300)}
+function afterSettle(){phase='idle';idleT=0;chain=0;if(moves<=0)return over();if(!findMove())shuffleBoard()}
+function over(){mode='over';const stars=score>=GOALS[2]?3:score>=GOALS[1]?2:score>=GOALS[0]?1:0;S.stars+=stars;if(score>S.best)S.best=score;if(stars==3)S.tickets++;save();
+ show(`<div class="card"><h1>${stars==3?'🏆 Siêu đỉnh!':stars?'🎉 Hết lượt!':'😊 Hết lượt!'}</h1><div class="tk">${'⭐'.repeat(stars)||'—'}</div><div class="ttl">Điểm: ${score}</div><div class="sub">${stars==3?'3 sao! Con được hoàn lại 1 vé 🎟️':'Mốc sao: '+GOALS.join(' · ')}</div><div class="sub">Vé còn lại: ${S.tickets}</div>
+ <div class="opts"><button class="go" id="p" ${S.tickets>0?'':'disabled'}>🍬 Chơi tiếp</button><button class="go alt" id="t">📝 Làm bài kiểm tra</button><button class="go alt" id="m">Menu</button></div></div>`);
+ document.getElementById('p').onclick=startCandy;document.getElementById('t').onclick=startTest;document.getElementById('m').onclick=menu}
+function cellAt(x,y){const c=Math.floor((x-BX)/T),r=Math.floor((y-BY)/T);return(c>=0&&c<C&&r>=0&&r<R)?[r,c]:null}
+function ptr(e){const b=cv.getBoundingClientRect();return[(e.clientX-b.left)*W/b.width,(e.clientY-b.top)*H/b.height]}
+cv.addEventListener('pointerdown',e=>{if(mode!='candy'||phase!='idle')return;const[x,y]=ptr(e),cl=cellAt(x,y);if(!cl)return;const t=grid[cl[0]][cl[1]];idleT=0;
+ if(t&&t.k==99){const cells=[];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const r=cl[0]+dr,c=cl[1]+dc;if(r>=0&&r<R&&c>=0&&c<C)cells.push([r,c])}chain=0;startClear(cells,[]);return}
+ if(sel&&Math.abs(sel[0]-cl[0])+Math.abs(sel[1]-cl[1])==1){attemptSwap(sel,cl);drag=null;return}sel=cl;drag={x,y,cl}});
+cv.addEventListener('pointermove',e=>{if(!drag||phase!='idle')return;const[x,y]=ptr(e),dx=x-drag.x,dy=y-drag.y;if(Math.hypot(dx,dy)>T*.45){const d=Math.abs(dx)>Math.abs(dy)?[0,Math.sign(dx)]:[Math.sign(dy),0],t=[drag.cl[0]+d[0],drag.cl[1]+d[1]];if(t[0]>=0&&t[0]<R&&t[1]>=0&&t[1]<C)attemptSwap(drag.cl,t);drag=null}});
+cv.addEventListener('pointerup',()=>{drag=null});
+function upd(dt){tt+=dt;for(let r=0;r<R;r++)for(let c=0;c<C;c++){const t=grid[r][c];if(!t)continue;if(t.dead)t.s=Math.max(0,t.s-dt*4.5);else t.s+=(1-t.s)*Math.min(1,dt*12)}
+ const mv=moveTiles(dt);
+ if(phase=='swap'){if(!mv){const runs=findRuns();if(runs.length){moves--;chain=0;doClear(runs)}else{swapTiles(swapPair[0],swapPair[1]);phase='back'}}}
+ else if(phase=='back'){if(!mv)phase='idle'}
+ else if(phase=='clear'){clearT-=dt;if(clearT<=0)endClear()}
+ else if(phase=='fall'){if(!mv){const runs=findRuns();if(runs.length){chain++;doClear(runs)}else afterSettle()}}
+ else if(phase=='idle')idleT+=dt}
+function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function txt(s,x,y,sz,al='center',c='#fff'){g.font=`800 ${sz}px ${FONT}`;g.textAlign=al;g.textBaseline='middle';g.fillStyle=c;g.fillText(s,x,y)}
+function shape(s,r){g.beginPath();
+ if(s=='circle')g.arc(0,0,r,0,7);
+ else if(s=='hex'){for(let i=0;i<6;i++){const a=Math.PI/3*i+Math.PI/6;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath()}
+ else if(s=='star'){for(let i=0;i<10;i++){const a=-Math.PI/2+Math.PI/5*i,rad=i%2?r*.55:r*1.08;g.lineTo(Math.cos(a)*rad,Math.sin(a)*rad)}g.closePath()}
+ else if(s=='tri'){g.moveTo(0,-r*1.05);g.lineTo(r*1.05,r*.8);g.lineTo(-r*1.05,r*.8);g.closePath()}
+ else if(s=='sq'){rr(-r*.88,-r*.88,r*1.76,r*1.76,r*.3)}
+ else{g.moveTo(0,-r*1.1);g.lineTo(r*.85,0);g.lineTo(0,r*1.1);g.lineTo(-r*.85,0);g.closePath()}}
+function drawTile(t,hl,hint){if(t.s<=.01)return;g.save();g.translate(t.x+T/2,t.y+T/2);g.scale(t.s,t.s);
+ if(t.k==99){const p=1+Math.sin(tt*6)*.06;g.scale(p,p);g.fillStyle='rgba(255,230,120,.6)';g.beginPath();g.arc(0,0,T*.46,0,7);g.fill();txt('💣',0,3,54,'center','#000')}
+ else{const cc=CC[t.k],r=T*.38;shape(cc.s,r);g.fillStyle=cc.c;g.fill();g.lineWidth=5;g.strokeStyle='#fff';g.stroke();g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(-r*.35,-r*.35,r*.28,r*.16,-.7,0,7);g.fill()}
+ if(hl||hint){g.strokeStyle=hl?'#fff':'rgba(255,230,120,'+(.55+.45*Math.sin(tt*8))+')';g.lineWidth=5;rr(-T/2+2,-T/2+2,T-4,T-4,12);g.stroke()}g.restore()}
+function panel(x,y,w,h){g.fillStyle='rgba(255,255,255,.93)';rr(x,y,w,h,20);g.fill()}
+function draw(){const bgc=g.createLinearGradient(0,0,W,H);bgc.addColorStop(0,'#4b2a7a');bgc.addColorStop(1,'#d6246e');g.fillStyle=bgc;g.fillRect(0,0,W,H);
+ if(mode!='candy'&&mode!='over'){CC.forEach((c,i)=>{g.save();g.translate(120+i*145,H/2+Math.sin(tt*2+i)*14);shape(c.s,40);g.fillStyle=c.c;g.fill();g.lineWidth=5;g.strokeStyle='#fff';g.stroke();g.restore()});return}
+ g.fillStyle='rgba(255,255,255,.22)';rr(BX-8,BY-8,C*T+16,R*T+16,18);g.fill();g.fillStyle='rgba(255,255,255,.13)';for(let r=0;r<R;r++)for(let c=0;c<C;c++)if((r+c)%2)g.fillRect(BX+c*T,BY+r*T,T,T);
+ const hint=(mode=='candy'&&phase=='idle'&&idleT>6)?findMove():null;g.save();g.beginPath();g.rect(BX,BY,C*T,R*T);g.clip();
+ for(let r=0;r<R;r++)for(let c=0;c<C;c++){const t=grid[r][c];if(!t)continue;drawTile(t,sel&&sel[0]==r&&sel[1]==c,hint&&((hint[0][0]==r&&hint[0][1]==c)||(hint[1][0]==r&&hint[1][1]==c)))}g.restore();
+ panel(12,30,196,200);txt('LƯỢT',110,64,28,'center','#7a3fb0');txt(String(moves),110,145,104,'center',moves<=5?'#d62839':'#2a1b4a');
+ panel(12,246,196,80);txt('🎟️ Vé: '+S.tickets,110,286,28,'center','#2a1b4a');
+ panel(12,342,196,128);txt('💣 Ghép 4 ô ra bom',110,374,17,'center','#2a1b4a');txt('bấm bom để nổ 3×3',110,402,17,'center','#2a1b4a');txt('Kéo hoặc bấm 2 ô',110,440,16,'center','#7a3fb0');
+ panel(752,30,196,250);txt('ĐIỂM',850,64,28,'center','#7a3fb0');txt(String(score),850,125,64,'center','#2a1b4a');
+ const bx=772,bw=156;g.fillStyle='#e4d9f4';rr(bx,170,bw,20,10);g.fill();g.fillStyle='#ff5fa2';const pw=bw*Math.min(1,score/GOALS[2]);if(pw>6){rr(bx,170,pw,20,10);g.fill()}
+ GOALS.forEach((gv,i)=>{const x=bx+bw*gv/GOALS[2]-(i==2?8:0);txt('⭐',x,222,28,'center','#000');txt(String(gv),x,254,13,'center',score>=gv?'#1e8e3e':'#555')})}
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;tt=ts/1000;if(mode=='candy')upd(dt);draw();requestAnimationFrame(loop)}
+menu();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
